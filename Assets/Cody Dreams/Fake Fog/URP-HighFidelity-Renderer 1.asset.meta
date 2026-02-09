@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: dce558836fdf3a34ab0d81372b242866
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 296903
+  packageName: Fake Fog
+  packageVersion: 1.2.2
+  assetPath: Assets/Cody Dreams/Fake Fog/URP-HighFidelity-Renderer 1.asset
+  uploadId: 761795

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 171dbd3564449a342aca9a3db435ad6b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 296903
+  packageName: Fake Fog
+  packageVersion: 1.2.2
+  assetPath: Assets/Cody Dreams/Fake Fog/FogSettings.asset
+  uploadId: 761795

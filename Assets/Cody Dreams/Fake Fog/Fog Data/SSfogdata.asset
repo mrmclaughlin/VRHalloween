@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5d624bc17f06f94dbf0ae24cb6de3d7, type: 3}
+  m_Name: SSfogdata
+  m_EditorClassIdentifier: 
+  color: {r: 0.345098, g: 1, b: 0.94464576, a: 0}
+  Density: 0.019
+  UseSceneFogColor: 1
+  FogHighet: -750
+  FogFallOff: 1000
+  OverAllIntensity: 0.617
+  directionalLight: {fileID: 0}

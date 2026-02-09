@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e21154da096f8bd4dad8bf375473286d, type: 3}
+  m_Name: FogSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SSFogSettings
+  materials:
+  - {fileID: 2100000, guid: b34a69d3a8f84e84ea04183aa4f0ac9b, type: 2}
+  - {fileID: 2100000, guid: c83360b083289d24a87e550a968a8364, type: 2}
+  fogDatas:
+  - FogDatas:
+    - {fileID: 11400000, guid: ee13ce53d106ca740bf9f16ada60a8b1, type: 2}
+    - {fileID: 11400000, guid: 6aaa50406ec27e347b44ecc8d1de1158, type: 2}
+  - FogDatas:
+    - {fileID: 11400000, guid: ee13ce53d106ca740bf9f16ada60a8b1, type: 2}
+    - {fileID: 11400000, guid: 6aaa50406ec27e347b44ecc8d1de1158, type: 2}
+  selectedFogIndex: 1

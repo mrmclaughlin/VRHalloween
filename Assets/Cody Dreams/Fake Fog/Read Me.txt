@@ -1,0 +1,44 @@
+Hello!
+
+the FogSettings.asset file in the fakefog folder please move it to the Asset root folder.
+
+// please note these are for older updates and if you use newer unity version you may not encounter this problem
+// also note newer update of the fake fog contains Editor tools which did not mentioned in here
+
+If you've updated this package, you may have noticed two folders named Fake Mist and Fake Fog. The Fake Mist folder was used in the previous version, while the updated version uses Fake Fog for the new system.
+
+If both folders appear in your project, please delete the Fake Mist folder to avoid any confusion.
+What's New in This Update
+
+    Updated Fog System (Screen-Space):
+    The fog system has been reworked to use a Screen-Space (SS) approach, implemented through a full-screen shader.
+        This provides a more flexible and performance-friendly method for rendering fog.
+        To use this feature, you will need to set up the full-screen materials in the render asset.
+        An example render asset has been included, which you can drop into the pipeline settings.
+
+    Enhanced Visuals:
+        The updated fog system now supports skybox fogging, ensuring seamless blending with the sky for a more immersive atmosphere.
+        Fog can also be adjusted based on height, allowing for realistic ground fog effects.
+
+    Performance Improvements:
+        The new fog system is optimized for performance, especially when applied to large areas or distant fog effects.
+
+Limitations
+
+    No Noise in Fog (Temporary):
+        Currently, noise is not included in the fog effect.
+        We understand its importance for creating realistic fog and are actively working to add this feature in future updates.
+        The lack of noise is due to challenges with implementing it in a screen-space effect, but we're committed to improving this feature.
+        We apologize for any inconvenience this may cause.
+
+Important Notes
+
+    Vegetation Assets:
+        The vegetation assets shown in the thumbnails are not included in this package.
+        These assets were used purely for rendering demonstrations and belong to The Toby Foliage Engine/Light.
+        We encourage you to explore those assets if you're interested in using them in your own project.
+
+    License:
+        This package falls under the Unity Asset Store EULA (End User License Agreement).
+        Redistribution, sharing, or repackaging of this asset is strictly prohibited.
+        By using this package, you agree to comply with the terms outlined in the Unity Asset Store EULA.
