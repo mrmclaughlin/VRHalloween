@@ -7723,7 +7723,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_CameraTransform
       value: 
-      objectReference: {fileID: 650672842}
+      objectReference: {fileID: 1313711681}
     - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189,
         type: 3}
       propertyPath: m_RootOrder
