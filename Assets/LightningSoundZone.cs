@@ -2,49 +2,90 @@ using UnityEngine;
 
 public class LightningSoundZone : MonoBehaviour
 {
-    [Header("Who triggers this")]
-    public string playerTag = "Player";
+    [Header("References")]
+    [SerializeField] private Transform hmd;          // Main Camera transform (HMD)
+    [SerializeField] private Collider zone;          // BoxCollider or any collider (trigger or not)
 
     [Header("Sound")]
-    public AudioSource audioSource;
-    public AudioClip clip;
-    [Range(0f, 1f)] public float volume = 1f;
+    [SerializeField] private AudioSource audioSource; // Put this on the zone object for 3D audio
+    [SerializeField] private AudioClip clip;
+    [Range(0f, 1f)][SerializeField] private float volume = 1f;
 
     [Header("Lightning FX")]
-    public ParticleSystem lightningParticles;
+    [SerializeField] private ParticleSystem lightningParticles;
 
     [Header("Behavior")]
-    public bool oneShot = true;
-    public float cooldownSeconds = 2f;
+    [SerializeField] private bool fireOnEnterOnly = true;
+    [SerializeField] private bool oneShot = false;          // if true, only ever fires once
+    [SerializeField] private float cooldownSeconds = 2f;     // prevent rapid refire near edges
 
-    private bool hasFired = false;
-    private float nextAllowedTime = 0f;
+    private bool isInside;
+    private bool hasFiredOnce;
+    private float nextAllowedTime;
 
     private void Reset()
     {
-        // Helps auto-wire if you add the script in-editor
+        zone = GetComponent<Collider>();
         audioSource = GetComponent<AudioSource>();
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void Awake()
     {
-        if (!other.CompareTag(playerTag)) return;
+        if (zone == null) zone = GetComponent<Collider>();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
-        if (oneShot && hasFired) return;
-        if (Time.time < nextAllowedTime) return;
+        // Auto-find main camera if not assigned
+        if (hmd == null && Camera.main != null)
+            hmd = Camera.main.transform;
 
-        Fire();
+        // Safety: keep particles quiet until triggered
+        if (lightningParticles != null)
+            lightningParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
-    private void Fire()
+    private void Update()
     {
-        hasFired = true;
+        if (hmd == null || zone == null) return;
+
+        bool nowInside = zone.bounds.Contains(hmd.position);
+
+        // Enter event
+        if (nowInside && !isInside)
+        {
+            isInside = true;
+            if (fireOnEnterOnly) TryFire();
+        }
+        // Exit event
+        else if (!nowInside && isInside)
+        {
+            isInside = false;
+
+            // If you want it to fire on exit instead, swap the call to here.
+            // TryFire();
+        }
+        else
+        {
+            isInside = nowInside;
+        }
+
+        // Optional: if you want it to fire repeatedly while inside on a cooldown,
+        // set fireOnEnterOnly = false and it will tick while inside.
+        if (!fireOnEnterOnly && isInside)
+        {
+            TryFire();
+        }
+    }
+
+    private void TryFire()
+    {
+        if (oneShot && hasFiredOnce) return;
+        if (Time.time < nextAllowedTime) return;
+
         nextAllowedTime = Time.time + cooldownSeconds;
+        hasFiredOnce = true;
 
         if (audioSource != null && clip != null)
-        {
             audioSource.PlayOneShot(clip, volume);
-        }
 
         if (lightningParticles != null)
         {
