@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: com.mrmclaughlin.Hauntedhouse
-  productName: Haunted House
+  companyName: com.mrmclaughlin.Labyrinth
+  productName: Labyrinth
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.050062295, g: 0.31530312, b: 0.7075472, a: 1}
@@ -40,8 +40,8 @@ PlayerSettings:
     width: 1
     height: 1
   m_SplashScreenLogos: []
-  m_VirtualRealitySplashScreen: {fileID: -4171161691550416614, guid: acf6dc70bd2cd62408341d030f9780f8,
-    type: 2}
+  m_VirtualRealitySplashScreen: {fileID: 2800000, guid: 65efa2ef3218ebe449c918dc401ecffa,
+    type: 3}
   m_HolographicTrackingLossScreen: {fileID: 0}
   defaultScreenWidth: 1024
   defaultScreenHeight: 768
@@ -138,7 +138,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 1.0.81
+  bundleVersion: 1.0.1
   preloadedAssets:
   - {fileID: 0}
   - {fileID: 0}
@@ -165,7 +165,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.com.mrmclaughlin.Hauntedhouse2.HauntedHouse2
+    Android: com.com.mrmclaughlin.Labyrinth.Labyrinth
     Standalone: com.UnityTechnologies.com.unity.template-starter-kit
   buildNumber:
     Standalone: 0
@@ -284,7 +284,7 @@ PlayerSettings:
   - m_BuildTarget: 
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: f456689befdd1d7419fdae9671de0e74, type: 3}
+      m_Icon: {fileID: 2800000, guid: 65efa2ef3218ebe449c918dc401ecffa, type: 3}
       m_Width: 128
       m_Height: 128
       m_Kind: 0
