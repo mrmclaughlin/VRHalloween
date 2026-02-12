@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,14 +27,35 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     [Range(0f, 0.5f)]
     public float braidFactor = 0.0f; // NOTE: keep at 0 for 'only one solution' feel.
 
-    [Header("Entrance / Exit")]
+    [Header("Entrance / Exit (Endpoints A=South, B=North)")]
     public bool randomizeEntranceExit = false;
 
-    [Tooltip("Entrance is on the SOUTH edge of this cell (x, y=0).")]
+    [Tooltip("Endpoint A: SOUTH edge x cell.")]
     public int entranceX = 0;
 
-    [Tooltip("Exit is on the NORTH edge of this cell (x, y=max).")]
+    [Tooltip("Endpoint B: NORTH edge x cell.")]
     public int exitX = 0;
+
+    [Header("Endless Maze Loop")]
+    [Tooltip("How many rebuilds happen AFTER the first build. Example: 1 means you go A->B, then rebuild once for B->A, then STOP.")]
+    [Min(0)]
+    public int rebuildsBeforeFinalEnd = 2;
+
+    [Tooltip("Small cooldown so the trigger can't spam rebuilds.")]
+    public float rebuildCooldownSeconds = 1.0f;
+
+    [Tooltip("Optional small delay so physics settles before rebuilding.")]
+    public float rebuildDelaySeconds = 0.05f;
+
+    [Tooltip("If true, the maze alternates A->B then B->A then A->B, until rebuild limit is reached.")]
+    public bool alternateDirections = true;
+
+    [Header("Exit Trigger Volume")]
+    [Tooltip("Size of the exit trigger in meters (X width, Y height, Z depth).")]
+    public Vector3 exitTriggerSize = new Vector3(1.2f, 2.2f, 1.2f);
+
+    [Tooltip("How far outside the boundary the exit trigger sits (meters).")]
+    public float exitTriggerOutset = 0.35f;
 
     [Header("Solution Path Debug (Scene Gizmos)")]
     public bool drawSolutionPath = true;
@@ -86,6 +108,7 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     public bool spawnSolutionMarkers = false;
     public float markerHeight = 0.1f;
     public GameObject oldMarker;
+
     [Header("Build Options")]
     public bool clearBeforeBuild = true;
     public bool buildOnStart = false;
@@ -101,10 +124,47 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     // Container for solution balls so we can easily clear them
     private Transform solutionBallRoot;
 
+    // Exit trigger instance for this build
+    private GameObject exitTriggerObj;
+
+    // Endpoints (fixed across the whole "long maze")
+    private int endpointA_SouthX;
+    private int endpointB_NorthX;
+
+    // Loop state
+    private int rebuildsDone = 0;
+    private bool goingAtoB = true; // true = start at A(South) end at B(North). false = start at B end at A
+    private float nextAllowedRebuildTime = -999f;
+
+    // Helper enum for clarity
+    private enum Edge { South, North }
+
     void Start()
     {
         if (!Application.isPlaying) return;
-        if (buildOnStart) Build();
+        if (buildOnStart)
+        {
+            InitializeEndpointsIfNeeded();
+            Build();
+        }
+    }
+
+    void InitializeEndpointsIfNeeded()
+    {
+        // Lock endpoints once (so you truly shuttle between the same two real-world places)
+        // If randomize is on, we pick them once at startup.
+        if (randomizeEntranceExit)
+        {
+            // cellsX isn't known yet on the first ever Start, so we defer to Build to clamp.
+            // We'll set provisional and clamp in Build.
+            endpointA_SouthX = entranceX;
+            endpointB_NorthX = exitX;
+        }
+        else
+        {
+            endpointA_SouthX = entranceX;
+            endpointB_NorthX = exitX;
+        }
     }
 
     [ContextMenu("Clear WorldRoot")]
@@ -147,32 +207,40 @@ public class GridMazeHedgeBuilder : MonoBehaviour
 
         origin = gymCenter.position + new Vector3(-mazeW * 0.5f, 0f, -mazeL * 0.5f);
 
+        // If randomize endpoints, do it ONCE now that cellsX is known.
+        if (randomizeEntranceExit && rebuildsDone == 0 && goingAtoB)
+        {
+            endpointA_SouthX = Random.Range(0, cellsX);
+            endpointB_NorthX = Random.Range(0, cellsX);
+        }
+
+        // Clamp endpoints to valid range (in case footprint changed)
+        endpointA_SouthX = Mathf.Clamp(endpointA_SouthX, 0, cellsX - 1);
+        endpointB_NorthX = Mathf.Clamp(endpointB_NorthX, 0, cellsX - 1);
+
         GeneratePerfectMaze(cellsX, cellsY);
 
         // IMPORTANT: If you want only one solution, keep braidFactor = 0
         if (braidFactor > 0f) BraidMaze(cellsX, cellsY, braidFactor);
 
-        // Choose entrance/exit
-        int ex, xx;
-        if (randomizeEntranceExit)
-        {
-            ex = Random.Range(0, cellsX);
-            xx = Random.Range(0, cellsX);
-        }
-        else
-        {
-            ex = Mathf.Clamp(entranceX, 0, cellsX - 1);
-            xx = Mathf.Clamp(exitX, 0, cellsX - 1);
-        }
+        // Determine current start/end based on direction
+        Edge startEdge = goingAtoB ? Edge.South : Edge.North;
+        Edge endEdge = goingAtoB ? Edge.North : Edge.South;
 
-        // Ensure exactly one entrance and one exit by carving boundary openings:
-        CarveEntranceExit(ex, xx);
+        int startX = goingAtoB ? endpointA_SouthX : endpointB_NorthX;
+        int endX   = goingAtoB ? endpointB_NorthX : endpointA_SouthX;
+
+        // Carve exactly one entrance and one exit on the chosen edges
+        CarveEntranceExitGeneral(startEdge, startX, endEdge, endX);
 
         // Build hedges for all walls
         BuildWallsAsHedges(cellsX, cellsY, origin);
 
-        // Compute solution path from entrance cell to exit cell
-        ComputeSolutionPath(new Vector2Int(ex, 0), new Vector2Int(xx, cellsY - 1));
+        // Compute solution path from start cell to end cell
+        Vector2Int startCell = (startEdge == Edge.South) ? new Vector2Int(startX, 0) : new Vector2Int(startX, cellsY - 1);
+        Vector2Int endCell   = (endEdge == Edge.North)  ? new Vector2Int(endX, cellsY - 1) : new Vector2Int(endX, 0);
+
+        ComputeSolutionPath(startCell, endCell);
 
         // In-game visual solution balls (prefab)
         SpawnSolutionBallsIfNeeded();
@@ -180,7 +248,44 @@ public class GridMazeHedgeBuilder : MonoBehaviour
         // Optional: old debug spheres
         if (spawnSolutionMarkers) SpawnSolutionMarkers();
 
-        Debug.Log($"Grid maze built: {cellsX} x {cellsY} cells. EntranceX={ex}, ExitX={xx}");
+        // Spawn the exit trigger at the end opening
+        SpawnOrMoveExitTrigger(endEdge, endX);
+
+        Debug.Log($"Grid maze built: {cellsX} x {cellsY} | Direction={(goingAtoB ? "A->B" : "B->A")} | Start {startEdge} x={startX} | End {endEdge} x={endX} | rebuildsDone={rebuildsDone}/{rebuildsBeforeFinalEnd}");
+    }
+
+    // Called by MazeEndTrigger when the player reaches the end
+    public void NotifyReachedMazeEnd()
+    {
+        if (!Application.isPlaying) return;
+
+        if (Time.time < nextAllowedRebuildTime) return;
+        nextAllowedRebuildTime = Time.time + rebuildCooldownSeconds;
+
+        // If we've already done enough rebuilds, we stop: this is the "real end".
+        if (rebuildsDone >= rebuildsBeforeFinalEnd)
+        {
+            Debug.Log("Maze end reached: FINAL END (no more rebuilds).");
+            // Optional: disable the trigger so it doesn't keep firing.
+            if (exitTriggerObj != null) exitTriggerObj.SetActive(false);
+            return;
+        }
+
+        rebuildsDone++;
+
+        if (alternateDirections)
+            goingAtoB = !goingAtoB;
+
+        // Rebuild (with a tiny delay if you want)
+        StartCoroutine(RebuildAfterDelay());
+    }
+
+    private IEnumerator RebuildAfterDelay()
+    {
+        if (rebuildDelaySeconds > 0f)
+            yield return new WaitForSeconds(rebuildDelaySeconds);
+
+        Build();
     }
 
     // ---------------- Maze generation ----------------
@@ -246,22 +351,30 @@ public class GridMazeHedgeBuilder : MonoBehaviour
         else if (dy == -1) { walls[a.x, a.y] &= ~4; walls[b.x, b.y] &= ~1; }  // a south open
     }
 
-    // ---------------- Ensure only one entrance and one exit ----------------
-    void CarveEntranceExit(int entranceXCell, int exitXCell)
+    // ---------------- Ensure only one entrance and one exit (generalized) ----------------
+    void CarveEntranceExitGeneral(Edge entranceEdge, int entranceXCell, Edge exitEdge, int exitXCell)
     {
+        // First force all boundary walls ON
         for (int x = 0; x < cellsX; x++)
         {
-            walls[x, 0] |= 4;                 // bottom row must have South walls
-            walls[x, cellsY - 1] |= 1;        // top row must have North walls
+            walls[x, 0] |= 4;                 // South walls on bottom row
+            walls[x, cellsY - 1] |= 1;        // North walls on top row
         }
         for (int y = 0; y < cellsY; y++)
         {
-            walls[0, y] |= 8;                 // left col must have West walls
-            walls[cellsX - 1, y] |= 2;        // right col must have East walls
+            walls[0, y] |= 8;                 // West walls on left col
+            walls[cellsX - 1, y] |= 2;        // East walls on right col
         }
 
-        walls[entranceXCell, 0] &= ~4;            // remove South wall bit
-        walls[exitXCell, cellsY - 1] &= ~1;       // remove North wall bit
+        // Now carve exactly ONE entrance and ONE exit on the chosen edges
+        entranceXCell = Mathf.Clamp(entranceXCell, 0, cellsX - 1);
+        exitXCell = Mathf.Clamp(exitXCell, 0, cellsX - 1);
+
+        if (entranceEdge == Edge.South) walls[entranceXCell, 0] &= ~4;
+        else if (entranceEdge == Edge.North) walls[entranceXCell, cellsY - 1] &= ~1;
+
+        if (exitEdge == Edge.North) walls[exitXCell, cellsY - 1] &= ~1;
+        else if (exitEdge == Edge.South) walls[exitXCell, 0] &= ~4;
     }
 
     // ---------------- Optional braiding (creates loops; can create multiple solutions) ----------------
@@ -393,6 +506,43 @@ public class GridMazeHedgeBuilder : MonoBehaviour
         return origin + new Vector3((x + 0.5f) * cellSize, 0f, (y + 0.5f) * cellSize);
     }
 
+    // ---------------- Exit trigger ----------------
+    void SpawnOrMoveExitTrigger(Edge exitEdge, int exitXCell)
+    {
+        // Create it (or reuse)
+        if (exitTriggerObj == null)
+        {
+            exitTriggerObj = new GameObject("MazeExitTrigger");
+            exitTriggerObj.transform.SetParent(worldRoot, true);
+
+            var col = exitTriggerObj.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+
+            var trig = exitTriggerObj.AddComponent<MazeEndTrigger>();
+            trig.builder = this;
+        }
+
+        // Size
+        var bc = exitTriggerObj.GetComponent<BoxCollider>();
+        bc.size = exitTriggerSize;
+
+        // Position it just outside the opening
+        Vector3 endCellCenter =
+            (exitEdge == Edge.North)
+                ? CellCenterWorld(exitXCell, cellsY - 1)
+                : CellCenterWorld(exitXCell, 0);
+
+        float half = cellSize * 0.5f;
+
+        Vector3 offset =
+            (exitEdge == Edge.North)
+                ? new Vector3(0f, exitTriggerSize.y * 0.5f, half + exitTriggerOutset)
+                : new Vector3(0f, exitTriggerSize.y * 0.5f, -(half + exitTriggerOutset));
+
+        exitTriggerObj.transform.position = endCellCenter + offset;
+        exitTriggerObj.SetActive(true);
+    }
+
     // ---------------- In-game solution balls ----------------
     void SpawnSolutionBallsIfNeeded()
     {
@@ -490,21 +640,8 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     {
         for (int i = 0; i < solutionWorldPoints.Count; i++)
         {
-            GameObject s = Instantiate(oldMarker);;
-			
-			
-			// Create a container so they’re easy to find/clean
-        
+            GameObject s = Instantiate(oldMarker);
 
-       
-
-            
-  
-			
-			
-			
-			
-			
             s.name = $"SolutionMarker_{i}";
             s.transform.SetParent(worldRoot, true);
             s.transform.position = solutionWorldPoints[i] + Vector3.up * markerHeight;
