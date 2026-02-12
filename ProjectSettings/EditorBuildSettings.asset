@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/hauntedHouse.unity
     guid: 280fd683123930446b472b35e263d179
+  - enabled: 1
+    path: Assets/Scenes/WellnessMaze.unity
+    guid: 9c515c8413e4030488aad214c539dbd4
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: ed72be55522c8448bae8b0d66fa21adf,
       type: 2}

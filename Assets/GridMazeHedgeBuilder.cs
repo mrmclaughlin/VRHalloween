@@ -85,7 +85,7 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     [Tooltip("Optional: drop small spheres along the solution path for debugging.")]
     public bool spawnSolutionMarkers = false;
     public float markerHeight = 0.1f;
-
+    public GameObject oldMarker;
     [Header("Build Options")]
     public bool clearBeforeBuild = true;
     public bool buildOnStart = false;
@@ -490,7 +490,21 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     {
         for (int i = 0; i < solutionWorldPoints.Count; i++)
         {
-            GameObject s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            GameObject s = Instantiate(oldMarker);;
+			
+			
+			// Create a container so they’re easy to find/clean
+        
+
+       
+
+            
+  
+			
+			
+			
+			
+			
             s.name = $"SolutionMarker_{i}";
             s.transform.SetParent(worldRoot, true);
             s.transform.position = solutionWorldPoints[i] + Vector3.up * markerHeight;
