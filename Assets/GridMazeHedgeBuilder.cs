@@ -53,6 +53,34 @@ public class GridMazeHedgeBuilder : MonoBehaviour
     [Tooltip("Optional: also place balls on start and end regardless of N.")]
     public bool alwaysPlaceBallAtStartAndEnd = true;
 
+    [Header("Solution Path Sound Triggers")]
+    public bool enableSoundTriggersOnSolutionBalls = true;
+
+    [Tooltip("Play a sound trigger every Nth *placed* solution ball.")]
+    [Min(1)]
+    public int soundTriggerEveryNthBall = 3;
+
+    [Tooltip("Sound clips assigned in order to each trigger ball.")]
+    public List<AudioClip> pathSoundClips = new List<AudioClip>();
+
+    [Tooltip("If true, after the last clip it wraps back to the first.")]
+    public bool loopSoundClipList = false;
+
+    [Range(0f, 1f)]
+    public float soundVolume = 1f;
+
+    [Tooltip("Radius (meters) of the trigger zone around the ball.")]
+    public float soundTriggerRadius = 0.6f;
+
+    [Tooltip("If true, the trigger plays only once per orb.")]
+    public bool soundTriggerOneShot = true;
+
+    [Tooltip("Cooldown (seconds) to prevent rapid re-trigger near edges.")]
+    public float soundTriggerCooldownSeconds = 1.5f;
+
+    [Tooltip("Main Camera / HMD. If null, will try Camera.main at runtime.")]
+    public Transform hmd;
+
     [Header("Old marker option (primitive spheres)")]
     [Tooltip("Optional: drop small spheres along the solution path for debugging.")]
     public bool spawnSolutionMarkers = false;
@@ -375,7 +403,14 @@ public class GridMazeHedgeBuilder : MonoBehaviour
         solutionBallRoot = new GameObject("SolutionBalls").transform;
         solutionBallRoot.SetParent(worldRoot, true);
 
+        // Resolve HMD reference (runtime)
+        if (hmd == null && Camera.main != null)
+            hmd = Camera.main.transform;
+
         int n = Mathf.Max(1, solutionBallEveryNthCell);
+
+        int placedBallCount = 0;  // counts only balls actually spawned
+        int soundClipIndex = 0;   // steps through your sound list in order
 
         for (int i = 0; i < solutionWorldPoints.Count; i++)
         {
@@ -395,7 +430,59 @@ public class GridMazeHedgeBuilder : MonoBehaviour
             GameObject orb = Instantiate(solutionBallPrefab, solutionBallRoot);
 #endif
             orb.transform.position = pos;
+
+            placedBallCount++;
+
+            // Every Nth *placed* ball gets a sound trigger
+            if (enableSoundTriggersOnSolutionBalls &&
+                soundTriggerEveryNthBall > 0 &&
+                (placedBallCount % soundTriggerEveryNthBall == 0))
+            {
+                // Do we have a clip to assign?
+                if (pathSoundClips != null && pathSoundClips.Count > 0)
+                {
+                    AudioClip chosen = null;
+
+                    if (soundClipIndex < pathSoundClips.Count)
+                    {
+                        chosen = pathSoundClips[soundClipIndex];
+                        soundClipIndex++;
+                    }
+                    else if (loopSoundClipList)
+                    {
+                        chosen = pathSoundClips[soundClipIndex % pathSoundClips.Count];
+                        soundClipIndex++;
+                    }
+
+                    if (chosen != null)
+                    {
+                        AddSoundTriggerToOrb(orb, chosen);
+                    }
+                }
+            }
         }
+    }
+
+    void AddSoundTriggerToOrb(GameObject orb, AudioClip clip)
+    {
+        // Create a child trigger zone
+        GameObject zoneObj = new GameObject("OrbSoundZone");
+        zoneObj.transform.SetParent(orb.transform, false);
+        zoneObj.transform.localPosition = Vector3.zero;
+
+        // Sphere trigger
+        SphereCollider sc = zoneObj.AddComponent<SphereCollider>();
+        sc.isTrigger = true;
+        sc.radius = soundTriggerRadius;
+
+        // Audio source on the zone (3D sound centered on orb)
+        AudioSource a = zoneObj.AddComponent<AudioSource>();
+        a.playOnAwake = false;
+        a.spatialBlend = 1f;
+
+        // HMD-based trigger script
+        HmdSoundZone hmdZone = zoneObj.AddComponent<HmdSoundZone>();
+        hmdZone.Init(hmd, clip, soundVolume, soundTriggerOneShot, soundTriggerCooldownSeconds);
     }
 
     // ---------------- Old primitive markers (optional) ----------------
