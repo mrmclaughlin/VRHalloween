@@ -814,22 +814,36 @@ public void ClearWorldRoot()
     }
 
     void AddSoundTriggerToOrb(GameObject orb, AudioClip clip)
-    {
-        GameObject zoneObj = new GameObject("OrbSoundZone");
-        zoneObj.transform.SetParent(orb.transform, false);
-        zoneObj.transform.localPosition = Vector3.zero;
+{
+    // Create a child trigger zone
+    GameObject zoneObj = new GameObject("OrbSoundZone");
+    zoneObj.transform.SetParent(orb.transform, false);
+    zoneObj.transform.localPosition = Vector3.zero;
 
-        SphereCollider sc = zoneObj.AddComponent<SphereCollider>();
-        sc.isTrigger = true;
-        sc.radius = soundTriggerRadius;
+    // Sphere trigger
+    SphereCollider sc = zoneObj.AddComponent<SphereCollider>();
+    sc.isTrigger = true;
+    sc.radius = soundTriggerRadius;
 
-        AudioSource a = zoneObj.AddComponent<AudioSource>();
-        a.playOnAwake = false;
-        a.spatialBlend = 1f;
+    // Audio source on the zone (3D sound centered on orb)
+    AudioSource a = zoneObj.AddComponent<AudioSource>();
+    a.playOnAwake = false;
+    a.spatialBlend = 1f;
+    a.clip = clip;                 // ✅ make sure a clip is assigned
+    a.volume = soundVolume;        // ✅ make sure volume is assigned
+    a.rolloffMode = AudioRolloffMode.Logarithmic;
+    a.minDistance = 0.25f;
+    a.maxDistance = 12f;
 
-        HmdSoundZone hmdZone = zoneObj.AddComponent<HmdSoundZone>();
-        hmdZone.Init(hmd, clip, soundVolume, soundTriggerOneShot, soundTriggerCooldownSeconds);
-    }
+    // Ensure we have an HMD reference every build
+    if (hmd == null && Camera.main != null)
+        hmd = Camera.main.transform;
+
+    // HMD-based trigger script
+    HmdSoundZone hmdZone = zoneObj.AddComponent<HmdSoundZone>();
+    hmdZone.Init(hmd, clip, soundVolume, soundTriggerOneShot, soundTriggerCooldownSeconds);
+}
+
 
     // ---------------- Old primitive markers (optional) ----------------
     void SpawnSolutionMarkers()

@@ -5014,7 +5014,7 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 566161896}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 4ae04a74ca3423d4e8b1f347bf60a4c8, type: 3}
@@ -28166,7 +28166,10 @@ MonoBehaviour:
   randomizeEntranceExit: 0
   entranceX: 7
   exitX: 2
-  rebuildsBeforeFinalEnd: 5
+  rebuildsBeforeFinalEnd: 2
+  showSegmentTriggerMarker: 0
+  triggerMarkerHeight: 0.6
+  triggerMarkerBaseRadius: 0.25
   triggerCellsBeforeGoal: 2
   maxDirectionMatchAttempts: 40
   enforceDirectionContinuity: 1
@@ -28180,10 +28183,10 @@ MonoBehaviour:
   drawCellCenters: 1
   solutionBallPrefab: {fileID: 5519246812859590405}
   solutionBallHeight: 0.02
-  solutionBallEveryNthCell: 3
+  solutionBallEveryNthCell: 1
   alwaysPlaceBallAtStartAndEnd: 1
   enableSoundTriggersOnSolutionBalls: 1
-  soundTriggerEveryNthBall: 3
+  soundTriggerEveryNthBall: 1
   pathSoundClips:
   - {fileID: 8300000, guid: ffcac3d6adf3c4a5a9fceb69ed040b5f, type: 3}
   - {fileID: 8300000, guid: 73fe6f8dbb7a64c96a1d52f467088b5d, type: 3}
@@ -28404,7 +28407,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2132620032}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 14473c55f403de24c97f1bffe099ca22, type: 3}
   m_Name: 
