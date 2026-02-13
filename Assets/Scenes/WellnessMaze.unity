@@ -28166,6 +28166,16 @@ MonoBehaviour:
   randomizeEntranceExit: 0
   entranceX: 7
   exitX: 2
+  rebuildsBeforeFinalEnd: 5
+  triggerCellsBeforeGoal: 2
+  maxDirectionMatchAttempts: 40
+  enforceDirectionContinuity: 1
+  blockOuterOpeningsUntilFinal: 1
+  openEntranceOnFirstBuild: 1
+  rebuildCooldownSeconds: 1
+  rebuildDelaySeconds: 0.05
+  segmentTriggerSize: {x: 1.2, y: 2.2, z: 1.2}
+  hmd: {fileID: 920921511}
   drawSolutionPath: 1
   drawCellCenters: 1
   solutionBallPrefab: {fileID: 5519246812859590405}
@@ -28186,7 +28196,6 @@ MonoBehaviour:
   soundTriggerRadius: 2
   soundTriggerOneShot: 0
   soundTriggerCooldownSeconds: 1.5
-  hmd: {fileID: 920921511}
   spawnSolutionMarkers: 1
   markerHeight: 0.034
   oldMarker: {fileID: 392279332332924750, guid: 1d21777a9fb934b409c129b5dc040ebc,
